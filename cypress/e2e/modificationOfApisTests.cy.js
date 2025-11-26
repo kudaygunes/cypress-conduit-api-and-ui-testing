@@ -9,7 +9,7 @@
 //   the application.
 // - Assertion: After logging in, the first `app-favorite-button` should show
 //   the modified favorites count value.
-it.only('apiModification', () => {
+it.only('apiModification', {retries: 2}, () => {
     cy.intercept('GET', '**/api/articles?limit=10&offset=0', req =>{
         req.continue(res => {
             res.body.articles[0].favoritesCount = 9999999

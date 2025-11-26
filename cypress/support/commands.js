@@ -36,21 +36,29 @@
  *      bypass the login page and load the app as an authenticated user
  */
 Cypress.Commands.add('loginToApplication', () => {
+    // Use configured API URL via Cypress.env('apiUrl') to keep test requests
+    // environment-agnostic. Override in CI or locally with cypress.env.json or
+    // the `--env` command line flag.
     cy.request({
-        url: 'https://conduit-api.bondaracademy.com/api/users/login',
+        url: Cypress.env('apiUrl') + '/users/login',
         method: 'POST',
         body: {
             "user": {
-                "email": "sertmulayim@protonmail.com",
-                "password": "Mulayim123"
+                "email": Cypress.env('username'),
+                "password": Cypress.env('password'),
+
             }
         }
-    }).then(response => {
+        }).then(response => {
         expect(response.status).to.equal(200)
         const accessToken = response.body.user.token
         cy.wrap(accessToken).as('accessToken')
         cy.visit('/', {
             onBeforeLoad(win) {
+                // The app stores the JWT token in localStorage as the raw token
+                // (without the 'Token ' prefix). API requests that use an
+                // Authorization header must include the 'Token ' prefix: e.g.
+                // { Authorization: 'Token <token_here>' }.
                 win.localStorage.setItem('jwtToken', accessToken)
             }
         })

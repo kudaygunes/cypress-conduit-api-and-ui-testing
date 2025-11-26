@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+import { faker } from '@faker-js/faker';
 
 // Test: end to end test
 // - Purpose: This test covers the complete lifecycle using direct API calls: login,
@@ -10,8 +11,15 @@
 //   4. Delete the article by its slug
 //   5. Verify the article no longer appears in the list
 it.only('end to end test', () => {
+    // Notes on usage and tokens:
+    // - The `apiUrl` used for cy.request() calls is read from `Cypress.env('apiUrl')`.
+    // - The Authorization header requires the 'Token ' prefix, e.g. 'Token <jwt>'.
+    // - The UI login command (`cy.loginToApplication`) sets the raw token into
+    //   localStorage (no 'Token ' prefix) so that navigating to the app simulates
+    //   a logged-in user.
+    const titleOfTheArticle = faker.person.fullName()
     cy.request({
-        url: 'https://conduit-api.bondaracademy.com/api/users/login',
+        url: Cypress.env('apiUrl') + '/users/login',
         method: 'POST',
         body: {
             "user": {
@@ -23,11 +31,11 @@ it.only('end to end test', () => {
         expect(response.status).to.equal(200)
         const accessToken = 'Token ' + response.body.user.token
         cy.request({
-            url: 'https://conduit-api.bondaracademy.com/api/articles/',
+            url: Cypress.env('apiUrl') + '/articles/',
             method: 'POST',
             body: {
                 "article": {
-                    "title": "Warhammer 40000 Horus Heresy",
+                    "title": titleOfTheArticle,
                     "description": "The galaxy is burning",
                     "body": "In the grim darkness of the far future, there is only war.",
                     "tagList": ["war", "sci-fi"]
@@ -36,20 +44,20 @@ it.only('end to end test', () => {
             headers: { 'Authorization': accessToken }
         }).then(response => {
             expect(response.status).to.equal(201)
-            expect(response.body.article.title).to.equal("Warhammer 40000 Horus Heresy")
+            expect(response.body.article.title).to.equal(titleOfTheArticle)
         })
 
         cy.request({
-            url: 'https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0',
+            url: Cypress.env('apiUrl') + '/articles?limit=10&offset=0',
             method: 'GET',
             headers: { 'Authorization': accessToken }
         }).then(response => {
             expect(response.status).to.equal(200)
-            expect(response.body.articles[0].title).to.equal("Warhammer 40000 Horus Heresy")
+            expect(response.body.articles[0].title).to.equal(titleOfTheArticle)
             const slugId = response.body.articles[0].slug
 
             cy.request({
-                url: `https://conduit-api.bondaracademy.com/api/articles/${slugId}`,
+                url: `${Cypress.env('apiUrl')}/articles/${slugId}`,
                 method: 'DELETE',
                 headers: { 'Authorization': accessToken }
             }).then(response => {
@@ -57,12 +65,12 @@ it.only('end to end test', () => {
             })
 
             cy.request({
-                url: 'https://conduit-api.bondaracademy.com/api/articles?limit=10&offset=0',
+                url: Cypress.env('apiUrl') + '/articles?limit=10&offset=0',
                 method: 'GET',
                 headers: { 'Authorization': accessToken }
             }).then(response => {
                 expect(response.status).to.equal(200)
-                expect(response.body.articles[0].title).to.not.equal("Warhammer 40000 Horus Heresy")
+                expect(response.body.articles[0].title).to.not.equal(titleOfTheArticle)
             })
         })
     })
