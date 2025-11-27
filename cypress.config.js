@@ -15,10 +15,23 @@ module.exports = defineConfig({
     apiUrl: 'https://conduit-api.bondaracademy.com/api'
   },
 
+  reporter: 'cypress-multi-reporters',
+  reporterOptions: {
+    configFile: 'reporter-config.json',
+  },
+
+  // Reporter configuration
+  // - `cypress-multi-reporters` allows using more than one Mocha reporter
+  //   simultaneously (e.g., mocha-junit-reporter for JUnit XML and
+  //   cypress-mochawesome-reporter for HTML reports).
+  // - `reporter-config.json` contains reporter-specific options such as
+  //   output file paths and embedded screenshots.
+
   e2e: {
     // baseUrl is the web app root; tests that use cy.visit('/') will load this URL.
     baseUrl: 'https://conduit.bondaracademy.com',
     setupNodeEvents(on, config) {
+      require('cypress-mochawesome-reporter/plugin')(on);
       // implement node event listeners here
     },
 

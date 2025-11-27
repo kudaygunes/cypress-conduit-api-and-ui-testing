@@ -1,0 +1,30 @@
+PACKAGE.JSON - SCRIPT COMMENTS, ISSUES & CROSS-PLATFORM SUGGESTIONS
+
+INSTALL COMMANDS / QUICK SETUP
+------------------------------
+Install recommended cross-platform helper packages and test-reporting tools:
+
+	npm install --save-dev rimraf npm-run-all
+	npm install --save-dev shx   # optional, provides 'shx rm' and other utilities
+
+If you want to add or update reporter packages as well (if not already present):
+	npm install --save-dev cypress-mochawesome-reporter cypress-multi-reporters junit-merge mocha-junit-reporter
+
+Recommended scripts to add to `package.json` (cross-OS safe):
+
+	"scripts": {
+		"delete:reports": "shx rm -rf cypress/reports/* || true",
+		"prereport": "npm run delete:reports",
+		"cy:run": "npx cypress run",
+		"junit:merge": "npx junit-merge -d cypress/junit -o cypress/reports/junit/results.xml",
+		"cy:run:all": "run-s --continue-on-error prereport cy:run junit:merge"
+        or
+        "cy:run:all": "npm run prereport && npx cypress run || true && npm run junit:merge"
+	}
+
+Notes:
+	- If you prefer `powershell` or Git Bash, you can also run the original
+		commands directly in those shells, but cross-platform scripts are
+		preferable for local dev and CI pipelines that use Windows.
+	- Adjust the `--continue-on-error` flag as you prefer; if you want to
+		fail the build on test failures, do not use `--continue-on-error`.
